@@ -1,0 +1,36 @@
+ROOT_PATH=$(shell pwd)
+CC=g++
+FLAG = -g -ljsoncpp -lpthread -ldl -lrt
+LDFLAG=-static
+BIN=fd
+COMM=$(ROOT_PATH)/common
+REDIS=$(ROOT_PATH)/redis/redisCPP
+
+INCLUDE= -I $(COMM) -I ./ -I/usr/include -I/usr/include/hiredis -I $(REDIS)  -I/home/lau/boost_1_55_0/sdk/include/boost
+ADDSRC=/home/lau/redis-cplusplus-client-master/anet.c
+LIB_PATH= -L $(ROOT_PATH)/lib  -L/home/lau/boost_1_55_0/sdk/lib -L/usr/lib 
+LINK_LIB=   -lredisclient  -lhiredis -lboost_thread
+
+all:$(BIN)
+.PHONY:all
+#SRC=$(shell ls -R | grep -E '^*.cpp')
+SRC=$(shell ls -R | grep -E '^*.cpp' | grep -v 'sql_connect.cpp' | grep -v 'libjsoncpp.a')
+OBJ=$(SRC:.cpp=.o)
+$(BIN):$(OBJ)
+	@echo "Linking [ $^ ] to [ $@ ] ... done"
+	$(CC) -o $@ $^ $(ADDSRC) $(LIB_PATH) $(LDFLAG)  $(LINK_LIB) $(FLAG)
+%.o:$(COMM)/%.cpp
+	@echo "Compiling [ $< ] to [ $@ ] ... done"
+	$(CC) -c $< $(ADDSRC) $(INCLUDE)  $(LIB_PATH) $(LDFLAG) $(LINK_LIB) $(FLAG)
+%.o:$(REDIS)/%.cpp
+	@echo "Compiling [ $< ] to [ $@ ] ... done"
+	$(CC) -c $< $(ADDSRC) $(INCLUDE)  $(LIB_PATH) $(LDFLAG) $(LINK_LIB) $(FLAG)
+
+.PHONY:clean
+clean:
+	$(RM) $(BIN)
+	$(RM) *.o
+	$(RM) *.txt
+	$(RM) *.aof
+	$(RM) *.rdb
+	$(RM) nodes-*.conf
